@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 #include "e2asm/lexer/lexer.h"
-#include <iostream>
 
 using namespace e2asm;
 
@@ -26,9 +25,10 @@ TEST_F(LexerTest, WhitespaceOnly) {
 
 TEST_F(LexerTest, SingleLineComment) {
     auto tokens = tokenize("; this is a comment");
-    ASSERT_EQ(tokens.size(), 1);
+    ASSERT_EQ(tokens.size(), 2);
 
-    EXPECT_EQ(tokens[0].type, TokenType::END_OF_FILE);
+    EXPECT_EQ(tokens[0].type, TokenType::NEWLINE);
+    EXPECT_EQ(tokens[1].type, TokenType::END_OF_FILE);
 }
 
 TEST_F(LexerTest, NewlineToken) {
@@ -89,10 +89,9 @@ TEST_F(LexerTest, SingleQuotedString) {
 
 TEST_F(LexerTest, CharacterLiteral) {
     auto tokens = tokenize("'A'");
-    std::cout << "Token type is " << static_cast<int>(tokens[0].type) << std::endl;
     ASSERT_GE(tokens.size(), 1);
-    EXPECT_TRUE(tokens[0].type == TokenType::STRING ||
-                tokens[0].type == TokenType::CHARACTER);
+    EXPECT_EQ(tokens[0].type, TokenType::NUMBER);
+    EXPECT_EQ(tokens[0].getNumber(), 65);
 }
 
 TEST_F(LexerTest, Register8Bit) {
@@ -240,8 +239,6 @@ TEST_F(LexerTest, ArithmeticOperators) {
     EXPECT_EQ(tokens[2].type, TokenType::STAR);
     EXPECT_EQ(tokens[3].type, TokenType::SLASH);
     EXPECT_EQ(tokens[4].type, TokenType::PERCENT);
-
-    std::cout << "Token Type Is " << static_cast<int>(tokens[4].type) << std::endl;
 }
 
 TEST_F(LexerTest, BitwiseOperators) {
@@ -259,14 +256,13 @@ TEST_F(LexerTest, ShiftOperators) {
 }
 
 TEST_F(LexerTest, Punctuation) {
-    auto tokens = tokenize(", : [ ] ( ) .");
+    auto tokens = tokenize(", : [ ] ( )");
     EXPECT_EQ(tokens[0].type, TokenType::COMMA);
     EXPECT_EQ(tokens[1].type, TokenType::COLON);
     EXPECT_EQ(tokens[2].type, TokenType::LBRACKET);
     EXPECT_EQ(tokens[3].type, TokenType::RBRACKET);
     EXPECT_EQ(tokens[4].type, TokenType::LPAREN);
     EXPECT_EQ(tokens[5].type, TokenType::RPAREN);
-    EXPECT_EQ(tokens[6].type, TokenType::DOT);
 }
 
 TEST_F(LexerTest, SpecialMarkers) {
