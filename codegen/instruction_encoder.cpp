@@ -464,6 +464,7 @@ EncodedInstruction InstructionEncoder::encodeImmediate(
 
         // Also check first operand for OUT imm8, AL/AX
         auto* imm0 = dynamic_cast<const ImmediateOperand*>(instr->operands[0].get());
+        auto* mem0 = dynamic_cast<const MemoryOperand*>(instr->operands[0].get());
 
         if (imm0) {
             // First operand is immediate (e.g., OUT imm8, AL)
@@ -479,6 +480,27 @@ EncodedInstruction InstructionEncoder::encodeImmediate(
             auto imm_bytes = encodeImmediate(value, imm_size);
             bytes.insert(bytes.end(), imm_bytes.begin(), imm_bytes.end());
             return EncodedInstruction(bytes);
+        }
+        else if (mem0) {
+          // First operand is memory (e.g., MOV [MEM16], AX)
+          if (mem0->is_direct_address) {
+            auto addr_bytes = encodeImmediate(mem0->direct_address_value, 2);
+            bytes.insert(bytes.end(), addr_bytes.begin(), addr_bytes.end());
+            return EncodedInstruction(bytes);
+          }
+          else if (mem0->parsed_address && mem0->parsed_address->registers.empty()) {
+            int64_t address = mem0->parsed_address->displacement;
+            if (mem0->parsed_address->has_label) {
+              auto symbol = lookupLabel(mem0->parsed_address->label_name);
+              if (!symbol || !symbol->is_resolved) {
+                return EncodedInstruction("Undefined label: " + mem0->parsed_address->label_name);
+              }
+              address += symbol->value;
+            }
+            auto addr_bytes = encodeImmediate(address, 2);
+            bytes.insert(bytes.end(), addr_bytes.begin(), addr_bytes.end());
+            return EncodedInstruction(bytes);
+          }
         }
         else if (imm) {
             // Second operand is immediate
