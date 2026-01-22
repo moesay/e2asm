@@ -163,8 +163,13 @@ Token Lexer::nextToken() {
     }
 
     // Identifiers, keywords, registers, instructions
-    if (isAlpha(c) || c == '_' || c == '.' || c == '%') {
+    if (isAlpha(c) || c == '_' || c == '.') {
         return scanIdentifier();
+    }
+
+    // Handle % separately to avoid confusing the lexer if it's not a directive
+    if (isAlpha(peekNext()) && c == '%') {
+      return scanIdentifier();
     }
 
     // Operators and punctuation
@@ -187,6 +192,7 @@ Token Lexer::nextToken() {
         case '(': return Token(TokenType::LPAREN, "(", loc);
         case ')': return Token(TokenType::RPAREN, ")", loc);
         case '.': return Token(TokenType::DOT, ".", loc);
+        // TokenType::DOT should be dropped entirely because it has not meaning other that starting an identifier.
 
         case '<':
             if (match('<')) {
