@@ -511,7 +511,7 @@ inline const std::vector<InstructionEncoding> INSTRUCTION_TABLE = {
     {"XCHG", {OperandSpec::REG16, OperandSpec::RM16}, EncodingType::MODRM, 0x87},
 
     // ========== Load Effective Address ==========
-    {"LEA", {OperandSpec::REG16, OperandSpec::MEM16}, EncodingType::MODRM, 0x8D},
+    {"LEA", {OperandSpec::REG16, OperandSpec::RM16}, EncodingType::MODRM, 0x8D},
     {"LDS", {OperandSpec::REG16, OperandSpec::MEM16}, EncodingType::MODRM, 0xC5},
     {"LES", {OperandSpec::REG16, OperandSpec::MEM16}, EncodingType::MODRM, 0xC4},
 };
