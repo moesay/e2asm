@@ -52,7 +52,7 @@ One of the main goals was to build a community around the project, as I believed
 
 In the new design, I reworked the architecture and separated the **assembler** from the **emulator**, making each one a standalone, independent project. In Elegant86, everything was bundled into a single project, which made the system harder to evolve and maintain.
 
-The new project is called E2. The name comes from Enhanced Elegant, but it also carries a deeper personal meaning: it represents the initials of my father’s name, **ElSayed ElKafafy**. May he rest in peace.
+The new project is called E2. The name comes from **Enhanced Elegant**, but it also carries a deeper personal meaning: it represents the initials of my father’s name, **ElSayed ElKafafy**. May he rest in peace.
 
 ## Why?
 
