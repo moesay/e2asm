@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE Debug)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 set(E2ASM_SOURCE_FOLDERS core lexer parser preprocessor semantic codegen)
 
 foreach(dir ${E2ASM_SOURCE_FOLDERS})
