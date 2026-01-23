@@ -1,0 +1,102 @@
+PROJECT_NAME           = "E2Asm"
+PROJECT_BRIEF          = "A modern, embeddable 8086 assembler written in C++20"
+PROJECT_NUMBER         = "0.1.0"
+PROJECT_LOGO           = e2-logo.png
+OUTPUT_DIRECTORY       = docs
+CREATE_SUBDIRS         = NO
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = YES
+EXTRACT_STATIC         = YES
+EXTRACT_LOCAL_CLASSES  = YES
+SHOW_FILES             = YES
+SHOW_NAMESPACES        = YES
+SHOW_INCLUDE_FILES     = YES
+HIDE_UNDOC_MEMBERS     = NO
+HIDE_UNDOC_CLASSES     = NO
+INPUT                  = core \
+                         lexer \
+                         parser \
+                         preprocessor \
+                         semantic \
+                         codegen \
+                         README.md
+FILE_PATTERNS          = *.h \
+                         *.hpp \
+                         *.cpp
+RECURSIVE              = YES
+EXCLUDE                = build \
+                         test
+EXCLUDE_PATTERNS       = */build/* \
+                         */test/* \
+                         */.git/* \
+                         */CMakeFiles/*
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = NO
+REFERENCED_BY_RELATION = YES
+REFERENCES_RELATION    = YES
+SHOW_USED_FILES        = YES
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+HTML_FILE_EXTENSION    = .html
+SEARCHENGINE           = YES
+GENERATE_LATEX         = NO
+GENERATE_MAN           = NO
+GENERATE_RTF           = NO
+GENERATE_XML           = NO
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = NO
+SKIP_FUNCTION_MACROS   = NO
+HAVE_DOT               = YES
+CLASS_DIAGRAMS         = YES
+CLASS_GRAPH            = YES
+COLLABORATION_GRAPH    = YES
+INCLUDE_GRAPH          = YES
+INCLUDED_BY_GRAPH      = YES
+CALL_GRAPH             = YES
+CALLER_GRAPH           = YES
+GRAPHICAL_HIERARCHY    = YES
+DIRECTORY_GRAPH        = YES
+DOT_IMAGE_FORMAT       = svg
+INTERACTIVE_SVG        = YES
+DOT_TRANSPARENT        = YES
+BRIEF_MEMBER_DESC      = YES
+REPEAT_BRIEF           = YES
+JAVADOC_AUTOBRIEF      = YES
+MULTILINE_CPP_IS_BRIEF = NO
+INHERIT_DOCS           = YES
+INLINE_INFO            = YES
+SORT_MEMBER_DOCS       = YES
+SORT_BRIEF_DOCS        = YES
+SHOW_NAMESPACE_MEMBERS = YES
+QUIET                  = NO
+WARNINGS               = YES
+WARN_IF_UNDOCUMENTED   = YES
+WARN_IF_DOC_ERROR      = YES
+WARN_NO_PARAMDOC       = YES
+WARN_FORMAT            = "$file:$line: $text"
+MARKDOWN_SUPPORT       = YES
+TOC_INCLUDE_HEADINGS   = 5
+MARKDOWN_ID_STYLE      = DOXYGEN
+OPTIMIZE_OUTPUT_FOR_C  = NO
+OPTIMIZE_OUTPUT_JAVA   = NO
+NUM_PROC_THREADS       = 0
+GENERATE_TREEVIEW      = YES
+FULL_SIDEBAR           = NO
+ALPHABETICAL_INDEX     = YES
+COLS_IN_ALPHA_INDEX    = 5
+HTML_HEADER            =
+HTML_FOOTER            =
+HTML_EXTRA_STYLESHEET  =
+HTML_TIMESTAMP         = YES
+HTML_DYNAMIC_SECTIONS  = YES
+SERVER_BASED_SEARCH    = NO
+USE_MDFILE_AS_MAINPAGE = README.md
+FILE_VERSION_FILTER    =
+EXAMPLE_PATH           =
+EXAMPLE_PATTERNS       = *
+ALIASES                = "threadsafe=@par Thread Safety:\n" \
+                         "complexity=@par Complexity:\n"
+HIDE_SCOPE_NAMES       = NO
+DISTRIBUTE_GROUP_DOC   = NO
+SUBGROUPING            = YES
