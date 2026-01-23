@@ -33,6 +33,7 @@
 
 ## Table of contents
 
+- [History](#history)
 - [Why?](#why)
 - [Overview](#overview)
 - [Quick start](#quick-start)
@@ -42,6 +43,16 @@
 - [Contributing](#contributing)
 - [Bugs and features requests](#bugs-and-features-requests)
 - [Copyright and license](#copyright-and-license)
+
+## History
+
+Back in 2019, I started a project called **Elegant86**. The idea was to build an all-in-one 8086 assembly suite. The scope was large and the effort required was significant, so I made a conscious decision to keep things as simple as possible _even if that meant using poor design patterns_ just to maintain momentum and make the workflow easier.
+
+One of the main goals was to build a community around the project, as I believed I would need help to sustain and grow it. However, after about a year, I didn’t receive the level of contribution I had expected. At that point, I found myself stuck with architectural decisions that were hard to justify, especially without the community support I had initially planned for. As a result, I decided to rewrite the project from scratch.
+
+In the new design, I reworked the architecture and separated the **assembler** from the **emulator**, making each one a standalone, independent project. In Elegant86, everything was bundled into a single project, which made the system harder to evolve and maintain.
+
+The new project is called E2. The name comes from Enhanced Elegant, but it also carries a deeper personal meaning: it represents the initials of my father’s name, **ElSayed ElKafafy**. May he rest in peace.
 
 ## Why?
 
