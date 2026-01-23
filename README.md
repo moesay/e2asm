@@ -141,14 +141,36 @@ Alternatively, you can use MinGW-w64 or Clang on Windows following similar steps
 
 ## Documentation
 
-Comprehensive documentation is currently under development. We are in the process of generating API documentation using Doxygen.
+API documentation is generated using Doxygen. To build the documentation locally:
 
-In the meantime, the codebase is structured to be self-documenting with clear separation of concerns:
+```bash
+# Install Doxygen (if not already installed)
+# Ubuntu/Debian
+sudo apt install doxygen graphviz
+
+# Fedora
+sudo dnf install doxygen graphviz
+
+# macOS
+brew install doxygen graphviz
+
+# Generate the documentation
+doxygen Doxyfile
+
+# Open the documentation in your browser
+# Linux
+xdg-open docs/html/index.html
+
+# macOS
+open docs/html/index.html
+```
+
+**Note:** Graphviz is optional but recommended for generating class diagrams and call graphs.
+
+The codebase is also structured to be self-documenting with clear separation of concerns:
 - Check the `core/` directory for the main assembler interface
 - Explore `lexer/`, `parser/`, `semantic/`, and `codegen/` for implementation details
 - Unit tests in the `test/` directory serve as usage examples
-
-Stay tuned for complete documentation coming soon!
 
 ## Contributing
 
