@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "e2asm/core/assembler.h"
+#include "E2Asm/core/assembler.h"
 
 using namespace e2asm;
 

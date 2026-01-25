@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "e2asm/lexer/lexer.h"
-#include "e2asm/parser/parser.h"
+#include "E2Asm/lexer/lexer.h"
+#include "E2Asm/parser/parser.h"
 
 using namespace e2asm;
 

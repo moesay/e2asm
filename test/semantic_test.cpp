@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
-#include "e2asm/lexer/lexer.h"
-#include "e2asm/parser/parser.h"
-#include "e2asm/semantic/semantic_analyzer.h"
-#include "e2asm/semantic/symbol_table.h"
+#include "E2Asm/lexer/lexer.h"
+#include "E2Asm/parser/parser.h"
+#include "E2Asm/semantic/semantic_analyzer.h"
+#include "E2Asm/semantic/symbol_table.h"
 
 using namespace e2asm;
 
