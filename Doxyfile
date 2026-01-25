@@ -1,6 +1,6 @@
 PROJECT_NAME           = "E2Asm"
 PROJECT_BRIEF          = "A modern, embeddable 8086 assembler written in C++20"
-PROJECT_NUMBER         = "0.1.0"
+PROJECT_NUMBER         = "1.0.0"
 PROJECT_LOGO           = e2-logo.png
 OUTPUT_DIRECTORY       = docs
 CREATE_SUBDIRS         = NO
