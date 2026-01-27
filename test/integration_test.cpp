@@ -451,6 +451,14 @@ TEST_F(AssemblerIntegrationTest, StringInstructions) {
     EXPECT_TRUE(result.success);
 }
 
+TEST_F(AssemblerIntegrationTest, MovingToES) {
+    std::string source = R"(
+        MOV ES, 0x1000
+    )";
+    auto result = assembler.assemble(source);
+    EXPECT_FALSE(result.success);
+}
+
 TEST_F(AssemblerIntegrationTest, RepMovsb) {
     auto result = assembler.assemble("REP MOVSB");
     EXPECT_TRUE(result.success);

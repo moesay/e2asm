@@ -172,16 +172,16 @@ bool InstructionEncoder::matchesSpec(const Operand* operand, OperandSpec spec) {
             return reg && reg->size == 8 && reg->code == 0;
 
         case OperandSpec::AX:
-            return reg && reg->size == 16 && reg->code == 0;
+            return reg && reg->size == 16 && reg->code == 0 && !reg->is_segment;
 
         case OperandSpec::SEGREG:
             return reg && reg->is_segment;
 
         case OperandSpec::CL:
-            return reg && reg->size == 8 && reg->code == 1;  // CL register
+            return reg && reg->size == 8 && reg->code == 1;
 
         case OperandSpec::DX:
-            return reg && reg->size == 16 && reg->code == 2;  // DX register
+            return reg && reg->size == 16 && reg->code == 2 && !reg->is_segment;
 
         case OperandSpec::REL8:
             // Label references for SHORT jumps
