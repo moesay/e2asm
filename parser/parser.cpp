@@ -280,31 +280,82 @@ std::unique_ptr<RegisterOperand> Parser::parseRegister() {
 std::unique_ptr<ImmediateOperand> Parser::parseImmediate() {
     SourceLocation loc = peek().location;
 
-    // Check for unary minus or plus
-    int sign = 1;
-    if (match(TokenType::MINUS)) {
-        sign = -1;
-    } else if (match(TokenType::PLUS)) {
-        sign = 1;
+    // Collect tokens that form an expression
+    // Valid expression tokens: NUMBER, CHARACTER, IDENTIFIER, PLUS, MINUS, STAR, SLASH, LPAREN, RPAREN
+    // IMPORTANT: IDENTIFIER should only be consumed after an operator (to allow label+offset),
+    // not at the start or after a value (to avoid consuming next line's label)
+    std::string expr;
+    bool has_identifier = false;
+    int paren_depth = 0;
+    bool last_was_operator = true;  // Start true to allow identifier at beginning
+
+    while (!isAtEnd()) {
+        TokenType type = peek().type;
+
+        // Check for operators first
+        if (type == TokenType::PLUS || type == TokenType::MINUS ||
+            type == TokenType::STAR || type == TokenType::SLASH) {
+            Token t = advance();
+            expr += t.lexeme;
+            last_was_operator = true;
+        }
+        // Parentheses
+        else if (type == TokenType::LPAREN) {
+            Token t = advance();
+            paren_depth++;
+            expr += t.lexeme;
+            last_was_operator = true;  // After '(' we expect a value
+        }
+        else if (type == TokenType::RPAREN) {
+            Token t = advance();
+            paren_depth--;
+            expr += t.lexeme;
+            last_was_operator = false;  // After ')' we have a complete subexpression
+        }
+        // Numbers and characters (values)
+        else if (type == TokenType::NUMBER) {
+            Token t = advance();
+            expr += std::to_string(t.getNumber());
+            last_was_operator = false;
+        }
+        else if (type == TokenType::CHARACTER) {
+            Token t = advance();
+            std::string char_str = t.getString();
+            if (!char_str.empty()) {
+                expr += std::to_string(static_cast<int>(char_str[0]));
+            }
+            last_was_operator = false;
+        }
+        // Identifiers - only consume after an operator or at the start
+        else if (type == TokenType::IDENTIFIER && last_was_operator) {
+            Token t = advance();
+            has_identifier = true;
+            expr += t.lexeme;
+            last_was_operator = false;
+        }
+        else {
+            // Not part of expression, stop
+            break;
+        }
     }
 
-    int64_t value = 0;
-    if (check(TokenType::NUMBER)) {
-        Token num_token = advance();
-        value = num_token.getNumber() * sign;
-    } else if (check(TokenType::CHARACTER)) {
-        Token char_token = advance();
-        // Character literals (e.g., 'A')
-        std::string char_str = char_token.getString();
-        if (!char_str.empty()) {
-            value = static_cast<int64_t>(char_str[0]) * sign;
-        }
-    } else {
-        error("Expected number or character");
+    if (expr.empty()) {
+        error("Expected immediate value or expression");
         return nullptr;
     }
 
-    return std::make_unique<ImmediateOperand>(value, loc);
+    if (has_identifier) {
+        // Contains labels - store as expression for later resolution during encoding
+        return std::make_unique<ImmediateOperand>(expr, loc);
+    } else {
+        // Pure numeric expression - evaluate now
+        auto result = ExpressionParser::evaluate(expr);
+        if (!result) {
+            error("Invalid expression: " + expr);
+            return nullptr;
+        }
+        return std::make_unique<ImmediateOperand>(*result, loc);
+    }
 }
 
 std::unique_ptr<MemoryOperand> Parser::parseMemory(const std::optional<std::string>& segment_override, uint8_t size_hint) {
