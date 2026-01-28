@@ -232,6 +232,22 @@ private:
      * @return true if all symbols resolved successfully
      */
     bool resolveDataSymbols(DataDirective* data);
+
+    /**
+     * @brief Resolves memory operand expressions in an instruction
+     * @param instr Instruction to process
+     * @return true if all memory operand expressions resolved successfully
+     *
+     * Re-parses memory address expressions with symbol lookup to resolve
+     * EQU constants in expressions like [label + s_size * 2 - 2].
+     */
+    bool resolveMemoryOperands(Instruction* instr);
+
+    /**
+     * @brief Creates a symbol lookup callback for expression evaluation
+     * @return Callback function that looks up symbols in the symbol table
+     */
+    std::function<std::optional<int64_t>(const std::string&)> createSymbolLookup();
 };
 
 } // namespace e2asm

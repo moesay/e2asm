@@ -1,4 +1,5 @@
 #include "semantic_analyzer.h"
+#include "../parser/expression_parser.h"
 #include <algorithm>
 
 namespace e2asm {
@@ -219,6 +220,11 @@ bool SemanticAnalyzer::pass1_buildSymbols(Program* program) {
 
         // Handle instructions
         if (auto* instr = dynamic_cast<Instruction*>(stmt.get())) {
+            // Resolve memory operand expressions (EQU constants, etc.)
+            if (!resolveMemoryOperands(instr)) {
+                return false;
+            }
+
             // Record address for this instruction
             uint64_t size = calculateInstructionSize(instr);
             instr->assigned_address = m_current_address;  // Store address in instruction
@@ -767,6 +773,45 @@ bool SemanticAnalyzer::resolveDataSymbols(DataDirective* data) {
             value.type = DataValue::Type::NUMBER;
         }
     }
+    return true;
+}
+
+std::function<std::optional<int64_t>(const std::string&)> SemanticAnalyzer::createSymbolLookup() {
+    return [this](const std::string& name) -> std::optional<int64_t> {
+        auto symbol = m_symbol_table.lookup(name);
+        if (symbol && symbol->is_resolved) {
+            return symbol->value;
+        }
+        return std::nullopt;
+    };
+}
+
+bool SemanticAnalyzer::resolveMemoryOperands(Instruction* instr) {
+    auto symbol_lookup = createSymbolLookup();
+
+    for (auto& operand : instr->operands) {
+        if (auto* mem = dynamic_cast<MemoryOperand*>(operand.get())) {
+            // Re-parse the address expression with symbol resolution
+            auto parsed = ExpressionParser::parseAddressWithSymbols(
+                mem->address_expr, symbol_lookup
+            );
+
+            if (!parsed) {
+                error("Invalid memory operand: " + mem->address_expr, mem->location);
+                return false;
+            }
+
+            // Update the parsed address
+            mem->parsed_address = std::make_unique<AddressExpression>(*parsed);
+
+            // Check if it's a direct address (no registers)
+            if (parsed->registers.empty() && !parsed->has_label) {
+                mem->is_direct_address = true;
+                mem->direct_address_value = static_cast<uint16_t>(parsed->displacement);
+            }
+        }
+    }
+
     return true;
 }
 
