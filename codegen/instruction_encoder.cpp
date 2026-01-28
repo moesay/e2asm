@@ -420,6 +420,18 @@ EncodedInstruction InstructionEncoder::encodeImmediate(
 ) {
     std::vector<uint8_t> bytes;
 
+    // Emit segment override prefix if any memory operand has one
+    for (const auto& op : instr->operands) {
+      auto* mem = dynamic_cast<const MemoryOperand*>(op.get());
+      if (mem && mem->segment_override) {
+        auto prefix = getSegmentOverridePrefix(*mem->segment_override);
+        if (prefix) {
+          bytes.push_back(*prefix);
+        }
+        break;
+      }
+    }
+
     bytes.push_back(encoding->base_opcode);
 
     // Handle different operand combinations

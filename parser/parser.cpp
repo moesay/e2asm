@@ -414,6 +414,7 @@ std::unique_ptr<MemoryOperand> Parser::parseMemory(const std::optional<std::stri
     }
 
     mem_op->segment_override = final_segment_override;
+    mem_op->address_expr = address_expr;
 
     // Parse the address expression
     auto parsed = ExpressionParser::parseAddress(address_expr);
