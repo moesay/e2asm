@@ -97,7 +97,7 @@ private:
     std::unique_ptr<RegisterOperand> parseRegister();
 
     /** @brief Parses an immediate value or symbol */
-    std::unique_ptr<ImmediateOperand> parseImmediate();
+    std::unique_ptr<ImmediateOperand> parseImmediate(uint8_t size_hint = 0);
 
     /** @brief Parses a memory operand [expression] */
     std::unique_ptr<MemoryOperand> parseMemory(const std::optional<std::string>& segment_override = std::nullopt, uint8_t size_hint = 0);

@@ -185,7 +185,7 @@ std::unique_ptr<Operand> Parser::parseOperand(const std::string& mnemonic) {
     // Handle optional unary minus/plus
     if (check(TokenType::NUMBER) || check(TokenType::CHARACTER) ||
         check(TokenType::MINUS) || check(TokenType::PLUS)) {
-        return parseImmediate();
+        return parseImmediate(size_hint);
     }
 
     // Check for jump distance specifier (SHORT, NEAR, FAR)
@@ -258,7 +258,7 @@ std::unique_ptr<Operand> Parser::parseOperand(const std::string& mnemonic) {
         }
 
         // Otherwise, treat as immediate operand with label/expression ref
-        return std::make_unique<ImmediateOperand>(expression, label_token.location);
+        return std::make_unique<ImmediateOperand>(expression, label_token.location, size_hint);
     }
 
     error("Expected operand (register, immediate, or memory address)");
@@ -277,7 +277,7 @@ std::unique_ptr<RegisterOperand> Parser::parseRegister() {
     );
 }
 
-std::unique_ptr<ImmediateOperand> Parser::parseImmediate() {
+std::unique_ptr<ImmediateOperand> Parser::parseImmediate(uint8_t size_hint) {
     SourceLocation loc = peek().location;
 
     // Collect tokens that form an expression
@@ -346,7 +346,7 @@ std::unique_ptr<ImmediateOperand> Parser::parseImmediate() {
 
     if (has_identifier) {
         // Contains labels - store as expression for later resolution during encoding
-        return std::make_unique<ImmediateOperand>(expr, loc);
+        return std::make_unique<ImmediateOperand>(expr, loc, size_hint);
     } else {
         // Pure numeric expression - evaluate now
         auto result = ExpressionParser::evaluate(expr);
@@ -354,7 +354,7 @@ std::unique_ptr<ImmediateOperand> Parser::parseImmediate() {
             error("Invalid expression: " + expr);
             return nullptr;
         }
-        return std::make_unique<ImmediateOperand>(*result, loc);
+        return std::make_unique<ImmediateOperand>(*result, loc, size_hint);
     }
 }
 

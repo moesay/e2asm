@@ -163,9 +163,15 @@ bool InstructionEncoder::matchesSpec(const Operand* operand, OperandSpec spec) {
             return false;
 
         case OperandSpec::IMM8:
+            // Respect the size_hint
+            // If size_hint is 16, don't match IMM8
+            if (imm && imm->size_hint == 16) return false;
             return (imm && (imm->value >= -128 && imm->value <= 255)) || label;
 
         case OperandSpec::IMM16:
+            // Respect the size_hint
+            // If size_hint is 8, don't match IMM16 (user explicitly wants byte)
+            if (imm && imm->size_hint == 8) return false;
             return (imm && (imm->value >= -32768 && imm->value <= 65535)) || label;
 
         case OperandSpec::AL:
