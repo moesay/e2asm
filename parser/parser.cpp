@@ -592,8 +592,13 @@ std::unique_ptr<DataDirective> Parser::parseDataDirective() {
             Token num_token = advance();
             directive->values.emplace_back(num_token.getNumber());
         }
+        else if (check(TokenType::IDENTIFIER)) {
+            // Symbol reference (EQU constant or label) - resolved during semantic analysis
+            Token id_token = advance();
+            directive->values.emplace_back(id_token.lexeme, DataValue::Type::SYMBOL);
+        }
         else {
-            error("Expected number, string, or character literal");
+            error("Expected number, string, character literal, or symbol");
             return directive;
         }
 
@@ -682,16 +687,25 @@ std::unique_ptr<RESDirective> Parser::parseRESDirective() {
 std::unique_ptr<TIMESDirective> Parser::parseTIMESDirective() {
     Token times_token = consume(TokenType::DIR_TIMES, "Expected TIMES");
 
-    /**
-      Prase the count number (for now)
-      TODO: add expressions support.
-      I'd like to collect tokens until i hit a directive/instruction
-      */
-    Token count_token = consume(TokenType::NUMBER, "Expected count after TIMES");
-    int64_t count = count_token.getNumber();
+    // Parse the count - can be a number or an identifier (EQU constant)
+    int64_t count = -1;  // -1 indicates unresolved
+    std::string count_expr;
 
-    // For now, store count as both number and expression string
-    std::string count_expr = count_token.lexeme;
+    if (check(TokenType::NUMBER)) {
+        Token count_token = advance();
+        count = count_token.getNumber();
+        count_expr = count_token.lexeme;
+    }
+    else if (check(TokenType::IDENTIFIER)) {
+        // Symbol reference - will be resolved during semantic analysis
+        Token id_token = advance();
+        count_expr = id_token.lexeme;
+        // count remains -1 to indicate it needs resolution
+    }
+    else {
+        error("Expected count (number or constant) after TIMES");
+        return nullptr;
+    }
 
     // Parse the repeated statement
     auto repeated = parseStatement();

@@ -120,11 +120,12 @@ struct DataValue {
     enum class Type {
         NUMBER,     ///< Numeric constant (0x42, 65, etc.)
         STRING,     ///< String literal ("hello")
-        CHARACTER   ///< Character literal ('A')
+        CHARACTER,  ///< Character literal ('A')
+        SYMBOL      ///< Unresolved symbol (EQU constant or label)
     } type;
 
-    int64_t number_value;      ///< Value when type is NUMBER
-    std::string string_value;  ///< Content when type is STRING or CHARACTER
+    int64_t number_value;      ///< Value when type is NUMBER (or resolved SYMBOL)
+    std::string string_value;  ///< Content when type is STRING, CHARACTER, or SYMBOL name
 
     DataValue(int64_t num) : type(Type::NUMBER), number_value(num) {}
     DataValue(std::string str, Type t = Type::STRING)

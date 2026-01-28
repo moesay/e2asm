@@ -216,6 +216,22 @@ private:
      * @return true for typical data segment names
      */
     bool isDataSegment(const std::string& name) const;
+
+    /**
+     * @brief Resolves a symbol name to its numeric value
+     * @param name Symbol name to look up
+     * @param loc Source location for error reporting
+     * @param out_value Output parameter for resolved value
+     * @return true if symbol was found and resolved, false otherwise
+     */
+    bool resolveSymbol(const std::string& name, SourceLocation loc, int64_t& out_value);
+
+    /**
+     * @brief Resolves all SYMBOL type values in a DataDirective to numbers
+     * @param data Data directive to process
+     * @return true if all symbols resolved successfully
+     */
+    bool resolveDataSymbols(DataDirective* data);
 };
 
 } // namespace e2asm

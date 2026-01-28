@@ -138,10 +138,24 @@ bool SemanticAnalyzer::pass1_buildSymbols(Program* program) {
 
         // Handle TIMES directive
         if (auto* times = dynamic_cast<TIMESDirective*>(stmt.get())) {
+            // Resolve symbolic count if needed (count == -1 means unresolved)
+            if (times->count < 0) {
+                int64_t resolved_count;
+                if (!resolveSymbol(times->count_expr, times->location, resolved_count)) {
+                    return false;
+                }
+                times->count = resolved_count;
+            }
+
             // Calculate size of the repeated node
             uint64_t single_size = 0;
 
             if (auto* data = dynamic_cast<DataDirective*>(times->repeated_node.get())) {
+                // Resolve any symbols in the data directive first
+                if (!resolveDataSymbols(data)) {
+                    return false;
+                }
+
                 size_t element_size = 0;
                 switch (data->size) {
                     case DataDirective::Size::BYTE: element_size = 1; break;
@@ -171,6 +185,11 @@ bool SemanticAnalyzer::pass1_buildSymbols(Program* program) {
 
         // Handle data directives
         if (auto* data = dynamic_cast<DataDirective*>(stmt.get())) {
+            // Resolve any symbols in the data directive
+            if (!resolveDataSymbols(data)) {
+                return false;
+            }
+
             uint64_t size = 0;
 
             // Calculate size based on directive and values
@@ -720,6 +739,35 @@ bool SemanticAnalyzer::isDataSegment(const std::string& name) const {
            lower_name == ".bss" || lower_name == "bss" ||
            lower_name == ".rodata" || lower_name == "rodata" ||
            lower_name == "_data" || lower_name == "_bss";
+}
+
+bool SemanticAnalyzer::resolveSymbol(const std::string& name, SourceLocation loc, int64_t& out_value) {
+    auto symbol = m_symbol_table.lookup(name);
+    if (!symbol) {
+        error("Undefined symbol: " + name, loc);
+        return false;
+    }
+    if (!symbol->is_resolved) {
+        error("Symbol '" + name + "' is not yet resolved", loc);
+        return false;
+    }
+    out_value = symbol->value;
+    return true;
+}
+
+bool SemanticAnalyzer::resolveDataSymbols(DataDirective* data) {
+    for (auto& value : data->values) {
+        if (value.type == DataValue::Type::SYMBOL) {
+            int64_t resolved_value;
+            if (!resolveSymbol(value.string_value, data->location, resolved_value)) {
+                return false;
+            }
+            // Convert SYMBOL to NUMBER with resolved value
+            value.number_value = resolved_value;
+            value.type = DataValue::Type::NUMBER;
+        }
+    }
+    return true;
 }
 
 } // namespace e2asm
