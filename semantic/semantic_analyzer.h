@@ -142,6 +142,15 @@ private:
     uint64_t calculateInstructionSize(Instruction* instr);
 
     /**
+     * @brief Calculates the ModRM + displacement size for a memory operand
+     * @param mem Memory operand to measure
+     * @return Size in bytes (1-3: 1 for ModRM, 0-2 for displacement)
+     *
+     * Accounts for register indirect (no disp), disp8, and disp16 cases.
+     */
+    uint64_t calculateMemoryEncodingSize(const MemoryOperand* mem);
+
+    /**
      * @brief Calculates size of data directive output
      * @param directive Directive name (DB, DW, etc.)
      * @param value_count Number of values

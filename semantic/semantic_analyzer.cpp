@@ -389,21 +389,29 @@ uint64_t SemanticAnalyzer::calculateInstructionSize(Instruction* instr) {
 
         // MOV with memory operands
         if (dest_mem || src_mem) {
+            const MemoryOperand* mem = dest_mem ? dest_mem : src_mem;
+            uint64_t seg_prefix = mem->segment_override.has_value() ? 1 : 0;
+
             // MOV mem, imm - needs opcode + ModRM + displacement + immediate
             if ((dest_mem && imm)) {
-                if (dest_mem->size_hint == 16 || (dest_mem->size_hint == 0 && imm->value > 255)) {
-                    return 6;  // Opcode (1) + ModRM (1) + disp16 (2) + imm16 (2)
-                } else {
-                    return 4;  // Opcode (1) + ModRM (1) + disp16 (2) + imm8 (1) - but conservative
-                }
+                uint64_t mem_size = calculateMemoryEncodingSize(dest_mem);
+                uint64_t imm_size = (dest_mem->size_hint == 16 || (dest_mem->size_hint == 0 && imm->value > 255)) ? 2 : 1;
+                return seg_prefix + 1 + mem_size + imm_size;  // prefix + opcode + mem_encoding + imm
             }
             // MOV AX/AL, [moffs] or MOV [moffs], AX/AL uses special 3-byte encoding
+            // But only for direct addresses (no registers)
             if ((dest_reg && dest_reg->code == 0 && src_mem) ||
                 (src_reg && src_reg->code == 0 && dest_mem)) {
-                return 3;  // Special encoding: opcode (1) + moffs16 (2)
+                // Check if it's a direct address (moffs encoding)
+                bool is_moffs = mem->is_direct_address ||
+                    (mem->parsed_address && mem->parsed_address->registers.empty());
+                if (is_moffs) {
+                    return seg_prefix + 3;  // prefix + opcode (1) + moffs16 (2)
+                }
             }
             // MOV reg, mem or MOV mem, reg (general form)
-            return 4;  // Opcode (1) + ModRM (1) + disp16 (2)
+            uint64_t mem_size = calculateMemoryEncodingSize(mem);
+            return seg_prefix + 1 + mem_size;  // prefix + opcode + mem_encoding
         }
     }
 
@@ -429,8 +437,8 @@ uint64_t SemanticAnalyzer::calculateInstructionSize(Instruction* instr) {
             // Memory operand or 8-bit register
             auto* mem = dynamic_cast<MemoryOperand*>(instr->operands[0].get());
             if (mem) {
-                // Memory operands need: opcode (1) + ModRM (1) + displacement (typically 2)
-                return 4;  // Conservative estimate for direct addressing
+                uint64_t seg_prefix = mem->segment_override.has_value() ? 1 : 0;
+                return seg_prefix + 1 + calculateMemoryEncodingSize(mem);  // prefix + opcode + mem_encoding
             }
             // 8-bit register
             return 2;  // Opcode + ModRM
@@ -456,7 +464,18 @@ uint64_t SemanticAnalyzer::calculateInstructionSize(Instruction* instr) {
 
             // General form with immediate
             if (imm) {
-                if (reg && reg->size == 16) {
+                // Check if first operand is memory
+                auto* mem = dynamic_cast<MemoryOperand*>(instr->operands[0].get());
+                if (mem) {
+                    uint64_t seg_prefix = mem->segment_override.has_value() ? 1 : 0;
+                    uint64_t mem_size = calculateMemoryEncodingSize(mem);
+                    uint64_t imm_size = (mem->size_hint == 16) ? 2 : 1;
+                    return seg_prefix + 1 + mem_size + imm_size;  // prefix + opcode + mem_encoding + imm
+                } else if (reg && reg->size == 16) {
+                    // Check if immediate has byte size hint (sign-extended imm8)
+                    if (imm->size_hint == 8) {
+                        return 3;  // Opcode (1) + ModRM (1) + imm8 (1) - uses 83 /r ib encoding
+                    }
                     return 4;  // Opcode (1) + ModRM (1) + imm16 (2)
                 } else {
                     return 3;  // Opcode (1) + ModRM (1) + imm8 (1)
@@ -472,8 +491,15 @@ uint64_t SemanticAnalyzer::calculateInstructionSize(Instruction* instr) {
                 }
             }
 
-            // reg, mem or mem, reg - needs displacement
-            return 4;  // Opcode (1) + ModRM (1) + disp16 (2)
+            // reg, mem or mem, reg
+            auto* mem0 = dynamic_cast<MemoryOperand*>(instr->operands[0].get());
+            auto* mem1 = dynamic_cast<MemoryOperand*>(instr->operands[1].get());
+            const MemoryOperand* mem = mem0 ? mem0 : mem1;
+            if (mem) {
+                uint64_t seg_prefix = mem->segment_override.has_value() ? 1 : 0;
+                return seg_prefix + 1 + calculateMemoryEncodingSize(mem);  // prefix + opcode + mem_encoding
+            }
+            return 4;  // Fallback
         }
     }
 
@@ -518,7 +544,14 @@ uint64_t SemanticAnalyzer::calculateInstructionSize(Instruction* instr) {
 
     // LEA, LDS, LES
     if (mnemonic == "LEA" || mnemonic == "LDS" || mnemonic == "LES") {
-        return 4;  // Opcode + ModRM + displacement (conservative)
+        if (instr->operands.size() >= 2) {
+            auto* mem = dynamic_cast<MemoryOperand*>(instr->operands[1].get());
+            if (mem) {
+                uint64_t seg_prefix = mem->segment_override.has_value() ? 1 : 0;
+                return seg_prefix + 1 + calculateMemoryEncodingSize(mem);  // prefix + opcode + mem_encoding
+            }
+        }
+        return 4;  // Fallback
     }
 
     // XCHG
@@ -553,6 +586,52 @@ uint64_t SemanticAnalyzer::calculateDataSize(const std::string& directive, size_
     if (directive == "DQ") return value_count * 8;
     if (directive == "DT") return value_count * 10;
     return 0;
+}
+
+uint64_t SemanticAnalyzer::calculateMemoryEncodingSize(const MemoryOperand* mem) {
+    // Returns the size of ModRM byte + displacement bytes
+    // Does NOT include segment prefix (caller must add 1 if segment_override is present)
+
+    if (!mem) return 3;  // Conservative fallback
+
+    // Direct numeric address: ModRM (1) + disp16 (2)
+    if (mem->is_direct_address) {
+        return 3;
+    }
+
+    // Check parsed address for register indirect vs direct
+    if (mem->parsed_address) {
+        const auto& addr = *mem->parsed_address;
+
+        // Direct address with label: ModRM (1) + disp16 (2)
+        if (addr.registers.empty()) {
+            return 3;
+        }
+
+        // Register indirect with no displacement
+        // Special case: [BP] alone requires at least disp8
+        if (!addr.has_displacement && !addr.has_label) {
+            if (addr.registers.size() == 1 && addr.registers[0] == "BP") {
+                return 2;  // ModRM (1) + disp8 (1)
+            }
+            return 1;  // Just ModRM, no displacement
+        }
+
+        // Has displacement - check if it fits in 8 bits
+        int64_t disp = addr.displacement;
+        if (addr.has_label) {
+            // Label reference - assume 16-bit displacement needed
+            return 3;  // ModRM (1) + disp16 (2)
+        }
+
+        if (disp >= -128 && disp <= 127) {
+            return 2;  // ModRM (1) + disp8 (1)
+        }
+        return 3;  // ModRM (1) + disp16 (2)
+    }
+
+    // Fallback: assume direct addressing with disp16
+    return 3;
 }
 
 std::optional<uint64_t> SemanticAnalyzer::getAddress(size_t statement_index) const {
