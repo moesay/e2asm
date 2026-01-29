@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
-project(e2asm)
+project(e2asm VERSION 1.1.0 LANGUAGES CXX)
+get_directory_property(parentDir PARENT_DIRECTORY)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -8,6 +9,30 @@ set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(E2Asm_TEST "Compile E2Asm UT suite" OFF)
+
+find_package(Git QUIET)
+if(GIT_FOUND)
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        OUTPUT_VARIABLE GIT_TAG
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+    if(GIT_TAG)
+      string(REGEX REPLACE "^v" "" E2ASM_VERSION ${GIT_TAG})
+    else()
+      set(E2ASM_VERSION ${PROJECT_VERSION})
+    endif()
+else()
+  set(E2ASM_VERSION ${PROJECT_VERSION})
+endif()
+
+if(parentDir)
+  set(E2ASM_VERSION ${E2ASM_VERSION} PARENT_SCOPE)
+else()
+  set(E2ASM_VERSION ${E2ASM_VERSION})
+endif()
 
 set(E2ASM_SOURCE_FOLDERS core lexer parser preprocessor semantic codegen)
 
@@ -50,12 +75,14 @@ if(E2ASM_TEST)
 
   enable_testing()
 
-  set(TEST_SOURCES
-    test/lexer_test.cpp
-    test/parser_test.cpp
-    test/semantic_test.cpp
-    test/integration_test.cpp
-  )
+  # set(TEST_SOURCES
+  #   test/lexer_test.cpp
+  #   test/parser_test.cpp
+  #   test/semantic_test.cpp
+  #   test/integration_test.cpp
+  # )
+
+  file(GLOB TEST_SOURCES test/*.cpp)
 
   add_executable(e2asm_ut ${TEST_SOURCES})
 
