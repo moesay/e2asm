@@ -75,13 +75,6 @@ if(E2ASM_TEST)
 
   enable_testing()
 
-  # set(TEST_SOURCES
-  #   test/lexer_test.cpp
-  #   test/parser_test.cpp
-  #   test/semantic_test.cpp
-  #   test/integration_test.cpp
-  # )
-
   file(GLOB TEST_SOURCES test/*.cpp)
 
   add_executable(e2asm_ut ${TEST_SOURCES})
