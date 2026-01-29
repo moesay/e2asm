@@ -15,6 +15,7 @@
 #include "../core/error.h"
 #include <vector>
 #include <memory>
+#include <functional>
 
 namespace e2asm {
 

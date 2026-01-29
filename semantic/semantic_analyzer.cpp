@@ -1,7 +1,6 @@
 #include "semantic_analyzer.h"
 #include "../parser/expression_parser.h"
 #include <algorithm>
-#include <functional>
 
 namespace e2asm {
 
